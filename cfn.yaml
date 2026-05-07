@@ -1,0 +1,107 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Reverser Template
+Parameters:
+  command:
+    Type: String
+    Description: Using the right command to choose the config file you want to config your AOC
+    Default: '--config=/etc/ecs/ecs-default-config.yaml'
+Resources:
+  ReverserTaskDef:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: reverser-task
+      ContainerDefinitions:
+       - Name: reverser-task
+         Image: 754131809344.dkr.ecr.ap-southeast-2.amazonaws.com/devopsagentdemo:latest
+         Cpu: 256
+         Memory: 512
+         Essential: true
+         Command: 
+           - 'opentelemetry-instrument'
+           - 'fastapi'
+           - 'run'
+           - '/app/reverser.py'
+         Environment:
+          - Name: "AWS_DEFAULT_REGION"
+            Value: !Ref AWS::Region 
+          - Name: "OTEL_PYTHON_DISTRO"
+            Value: "aws_distro"
+          - Name: "OTEL_PYTHON_CONFIGURATOR"
+            Value: "aws_configurator"
+          - Name: "OTEL_RESOURCE_ATTRIBUTES"
+            Value: "service.name=reverser"
+          - Name: "OTEL_SERVICE_NAME"
+            Value: "reverser"
+          - Name: "OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED"
+            Value: "true"
+         LogConfiguration:
+          LogDriver: awslogs
+          Options:
+           awslogs-group: !Ref ReverserLogGroup
+           awslogs-region: !Ref AWS::Region
+           awslogs-stream-prefix: 'reverser'
+           mode: 'non-blocking'
+           max-buffer-size: 25m
+         DependsOn:
+          - containerName: "aws-otel-collector"
+            condition: "START"
+       - Name: aws-otel-collector
+         Image: public.ecr.aws/aws-observability/aws-otel-collector:latest
+         Essential: true 
+         Cpu: 256
+         Memory: 512
+         Command: [!Ref command]
+         LogConfiguration:
+           LogDriver: awslogs
+           Options:
+             awslogs-create-group: true
+             awslogs-group: /ecs/ecs-aws-otel-sidecar-collector
+             awslogs-region: !Ref 'AWS::Region'
+             awslogs-stream-prefix: ecs
+      Cpu: 512
+      Memory: 1024
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      ExecutionRoleArn: !GetAtt ReverserTaskExecutionRole.Arn
+      TaskRoleArn: !GetAtt ReverserTaskRole.Arn
+  ReverserLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: "/unicornrentals/reverser-otel-lg"
+      RetentionInDays: 1
+  ReverserTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: reverser-otel-ecs-task-execution-role
+      Path: /
+      AssumeRolePolicyDocument: 
+        Statement:
+         - Effect: Allow
+           Principal:
+             Service:
+               - ecs-tasks.amazonaws.com
+           Action:
+            - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+        - arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+        - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+  ReverserTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: reverser-otel-ecs-task-role
+      Path: /
+      AssumeRolePolicyDocument:
+          Statement:
+           - Effect: Allow
+             Principal:
+               Service:
+                 - ecs-tasks.amazonaws.com
+             Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+        - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
