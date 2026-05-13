@@ -34,6 +34,8 @@ Resources:
             Value: "reverser"
           - Name: "OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED"
             Value: "true"
+          - Name: "OTEL_PYTHON_LOG_CORRELATION"
+            Value: "true"
          LogConfiguration:
           LogDriver: awslogs
           Options:
