@@ -39,7 +39,7 @@ logger = _logs.get_logger(__name__)
 #logger.setLevel(logging.INFO)
 
 exporter = OTLPLogExporter(endpoint="http://localhost:4317",insecure=True)
-resource = Resource.create({"service.name": "reverser"})
+resource = Resource.create({"service.name": "reverser","aws.local.service":"reverser"})
 logger_provider = LoggerProvider(resource=resource)
 logger_provider.add_log_record_processor(BatchLogRecordProcessor(exporter))
 _logs.set_logger_provider(logger_provider)
