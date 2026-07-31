@@ -1,0 +1,13 @@
+FROM public.ecr.aws/amazonlinux/amazonlinux:2023-minimal
+RUN dnf -y update && dnf -y install python3.14 python3.14-pip
+COPY lambda_requirements.txt /app/requirements.txt
+RUN pip3.14 install -r /app/requirements.txt --target ./python 
+RUN zip -r python.zip ./python
+
+FROM scratch AS artifact
+COPY --from=build /python.zip /python314-requests-lambda-layer.zip
+
+# this builds the Lambda layer for the reverser crash lambda
+
+# execute this DOCKER_BUILDKIT=1 docker build --target artifact --output type=local,dest=. .
+# it will output you the built zip file using docker magic
