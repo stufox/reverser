@@ -1,4 +1,4 @@
-FROM public.ecr.aws/amazonlinux/amazonlinux:2023-minimal
+FROM public.ecr.aws/amazonlinux/amazonlinux:2023-minimal AS build
 RUN dnf -y update && dnf -y install python3.14 python3.14-pip
 COPY lambda_requirements.txt /app/requirements.txt
 RUN pip3.14 install -r /app/requirements.txt --target ./python 
