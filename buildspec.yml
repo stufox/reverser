@@ -24,4 +24,16 @@ phases:
 artifacts:
   files:
     - cfn.yaml
-    - python314-requests-lambda-layer.zip
+  secondary-artifacts:
+    lambdalayer:
+      files:
+        - python314-requests-lambda-layer.zip
+      name: python314-requests-lambda-layer.zip
+    cfn:
+      files:
+        - cfn.yaml
+      name: cfn.yaml
+    lambdasource:
+      files:
+        - lambda-deployment-package.zip
+      name: lambda-deployment-package.zip
