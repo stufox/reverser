@@ -122,6 +122,7 @@ Resources:
             - sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPullOnly
   CrashReverserLambda:
     Type: AWS::Lambda::Function
     Properties:
