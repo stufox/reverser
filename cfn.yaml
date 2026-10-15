@@ -107,3 +107,25 @@ Resources:
         - arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
         - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+  CrashReverserLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: crash-reverser-lambda-role
+      Path: /
+      AssumeRolePolicyDocument: 
+        Statement:
+         - Effect: Allow
+           Principal:
+             Service:
+               - lambda.amazonaws.com
+           Action:
+            - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+  CrashReverserLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code: 
+        ImageUri: 754131809344.dkr.ecr.ap-southeast-2.amazonaws.com/devopsagentdemo:lambda
+      Role: !GetAtt CrashReverserLambdaRole.Arn
+      PackageType: Image
